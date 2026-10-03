@@ -7,7 +7,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: unzip -q *.zip
+      - name: unzip if needed
+        run: for z in *.zip; do [ -f "$z" ] && unzip -qo "$z"; done; true
+      - name: find project
+        id: find
+        run: echo "dir=$(dirname "$(find . -name settings.gradle.kts | head -1)")" >> "$GITHUB_OUTPUT"
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -16,8 +20,8 @@ jobs:
         with:
           gradle-version: 8.7
       - run: gradle assembleDebug --no-daemon
-        working-directory: SelfatorLock
+        working-directory: ${{ steps.find.outputs.dir }}
       - uses: actions/upload-artifact@v4
         with:
           name: Selfator-apk
-          path: SelfatorLock/app/build/outputs/apk/debug/app-debug.apk
+          path: ${{ steps.find.outputs.dir }}/app/build/outputs/apk/debug/app-debug.apk
